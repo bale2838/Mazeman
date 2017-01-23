@@ -4,9 +4,10 @@ import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 
-public class Pacman extends JFrame {
-	public Pacman() {
+public class Mazeman extends JFrame {
+	public Mazeman() {
 		// init window stuff
+		add(new Board());
 		setTitle("Pacman");
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setSize(380, 420);
@@ -18,7 +19,7 @@ public class Pacman extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				Pacman ex = new Pacman();
+				Mazeman ex = new Mazeman();
 				ex.setVisible(true);
 			}
 		});
