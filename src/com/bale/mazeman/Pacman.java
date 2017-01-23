@@ -6,6 +6,7 @@ import javax.swing.JFrame;
 
 public class Pacman extends JFrame {
 	public Pacman() {
+		// init window stuff
 		setTitle("Pacman");
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setSize(380, 420);
