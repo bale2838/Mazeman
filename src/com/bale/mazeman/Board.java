@@ -107,7 +107,7 @@ public class Board extends JPanel implements ActionListener {
 
 	private void initLevel() {
 		for (int i = 0; i < NUM_BLOCKS * NUM_BLOCKS; i++) {
-			screenData[i] = LEVEL_DATA[i];
+			screenData[i] = 0;
 		}
 		mazemanx = 7 * BLOCK_SIZE;
 		mazemany = 11 * BLOCK_SIZE;

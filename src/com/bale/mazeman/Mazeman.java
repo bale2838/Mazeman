@@ -1,7 +1,6 @@
 package com.bale.mazeman;
 
 import java.awt.EventQueue;
-
 import javax.swing.JFrame;
 
 public class Mazeman extends JFrame {
