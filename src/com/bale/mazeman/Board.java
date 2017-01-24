@@ -48,7 +48,6 @@ public class Board extends JPanel implements ActionListener {
 	private int mazemanx, mazemany, mazemandx, mazemandy;
 	private int reqdx, reqdy, viewdx, viewdy;
 	private int[] dx, dy;
-	private int mazemanAnimPos = 0;
 	
 	private Image mazeman1;
 	private Image mazeman2up, mazeman2down, mazeman2left, mazeman2right;
@@ -57,7 +56,6 @@ public class Board extends JPanel implements ActionListener {
 
 	private boolean inGame = true;// TODO set back to false
 	private boolean isDying = false;
-	
 	private Timer timer;
 
 	public Board() {
@@ -71,22 +69,6 @@ public class Board extends JPanel implements ActionListener {
 
 	private void loadImages() {
 		mazeman1 = new ImageIcon(Board.class.getResource("/mazeman.png")).getImage();
-
-		mazeman2up = new ImageIcon(Board.class.getResource("/up1.png")).getImage();
-		mazeman3up = new ImageIcon(Board.class.getResource("/up2.png")).getImage();
-		mazeman4up = new ImageIcon(Board.class.getResource("/up3.png")).getImage();
-
-		mazeman2down = new ImageIcon(Board.class.getResource("/down1.png")).getImage();
-		mazeman3down = new ImageIcon(Board.class.getResource("/down2.png")).getImage();
-		mazeman4down = new ImageIcon(Board.class.getResource("/down3.png")).getImage();
-
-		mazeman2left = new ImageIcon(Board.class.getResource("/left1.png")).getImage();
-		mazeman3left = new ImageIcon(Board.class.getResource("/left2.png")).getImage();
-		mazeman4left = new ImageIcon(Board.class.getResource("/left3.png")).getImage();
-
-		mazeman2right = new ImageIcon(Board.class.getResource("/right1.png")).getImage();
-		mazeman3right = new ImageIcon(Board.class.getResource("/right2.png")).getImage();
-		mazeman4right = new ImageIcon(Board.class.getResource("/right3.png")).getImage();
 	}
 
 	private void initVariables() {
@@ -107,7 +89,7 @@ public class Board extends JPanel implements ActionListener {
 
 	private void initLevel() {
 		for (int i = 0; i < NUM_BLOCKS * NUM_BLOCKS; i++) {
-			screenData[i] = 0;
+			screenData[i] = LEVEL_DATA[i];
 		}
 		mazemanx = 7 * BLOCK_SIZE;
 		mazemany = 11 * BLOCK_SIZE;
@@ -138,18 +120,36 @@ public class Board extends JPanel implements ActionListener {
 
 		if (mazemanx % BLOCK_SIZE == 0 && mazemany % BLOCK_SIZE == 0) {
 			pos  = (mazemanx / BLOCK_SIZE) + NUM_BLOCKS * (int)(mazemany / BLOCK_SIZE);
+			//System.out.println("pos: " + pos);
 			ch = screenData[pos];
 
 			if ((ch & 16) != 0){
+				//System.out.println("    ch: " + ch);
+				//System.out.println("ch & 1: " + (ch & 1));
 				screenData[pos] = (short)(ch & 15);
+				//System.out.println("ch & 15: " + (ch & 15));
 				score++;
 			}
 
+			/*
+			 * 1 == left border
+			 * 4 == right border
+			 * 2 == top border
+			 * 8 == bottom border
+			 */
+			boolean hitLeftBorder = ((ch & 1) != 0);
+		    boolean hitRightBorder = ((ch & 4) != 0);
+		    boolean hitTopBorder = ((ch & 2) != 0);
+		    boolean hitBotBorder = ((ch & 8) != 0);
+		    boolean requestLeft = (reqdx == -1 && reqdy == 0);
+		    boolean requestRight = (reqdx == 1 && reqdy == 0);
+		    boolean requestUp = (reqdx == 0 && reqdy == -1);
+		    boolean requestDown = (reqdx == 0 && reqdy == 1);
 			if (reqdx != 0 || reqdy != 0) {
-				if (!((reqdx == -1 && reqdy == 0 && (ch & 1) != 0)
-						|| (reqdx == 1 && reqdy == 0 && (ch & 4) != 0)
-						|| (reqdx == 0 && reqdy == -1 && (ch & 2) != 0)
-						|| (reqdx == 0 && reqdy == 1 && (ch & 8) != 0))) {
+				if (!((requestLeft && hitLeftBorder)
+						|| (requestRight && hitRightBorder)
+						|| (requestUp && hitTopBorder)
+						|| (requestDown && hitBotBorder))) {
 					mazemandx = reqdx;
 					mazemandy = reqdy;
 					viewdx = mazemandx;
@@ -158,10 +158,14 @@ public class Board extends JPanel implements ActionListener {
 			}
 
 			// check for standstill
-			if ((mazemandx == -1 && mazemandy == 0 && (ch & 1) != 0)
-					|| (mazemandx == 1 && mazemandy == 0 && (ch & 4) != 0)
-					|| (mazemandx == 0 && mazemandy == -1 && (ch & 2) != 0)
-					|| (mazemandx == 0 && mazemandy == 1 && (ch & 8) != 0)) {
+			boolean moveLeft = (mazemandx == -1 && mazemandy == 0);
+			boolean moveRight = (mazemandx == 1 && mazemandy == 0);
+		    boolean moveUp = (mazemandx == 0 && mazemandy == -1);
+		    boolean moveDown = (mazemandx == 0 && mazemandy == 1);
+			if ((moveLeft && hitLeftBorder)
+					|| (moveRight && hitRightBorder)
+					|| (moveUp && hitTopBorder)
+					|| (moveDown && hitBotBorder)) {
 				mazemandx = 0;
 				mazemandy = 0;
 			}
@@ -173,81 +177,13 @@ public class Board extends JPanel implements ActionListener {
 
 	private void drawMazeman(Graphics2D g2d) {
 		if (viewdx == -1) {
-			drawMazemanLeft(g2d);
+			g2d.drawImage(mazeman1, mazemanx + 1, mazemany + 1, this);
 		} else if (viewdx == 1) {
-			drawMazemanRight(g2d);
+			g2d.drawImage(mazeman1, mazemanx + 1, mazemany + 1, this);
 		} else if (viewdy == -1) {
-			drawMazemanUp(g2d);
+			g2d.drawImage(mazeman1, mazemanx + 1, mazemany + 1, this);
 		} else if (viewdy == 1) {
-			drawMazemanDown(g2d);
-		}
-	}
-
-	private void drawMazemanUp(Graphics2D g2d) {
-		switch (mazemanAnimPos) {
-		case 1:
-			g2d.drawImage(mazeman2up, mazemanx + 1, mazemany + 1, this);
-			break;
-		case 2:
-			g2d.drawImage(mazeman3up, mazemanx + 1, mazemany + 1, this);
-			break;
-		case 3:
-			g2d.drawImage(mazeman3up, mazemanx + 1, mazemany + 1, this);
-			break;
-		default:
 			g2d.drawImage(mazeman1, mazemanx + 1, mazemany + 1, this);
-			break;
-		}
-	}
-
-	private void drawMazemanDown(Graphics2D g2d) {
-		switch (mazemanAnimPos) {
-		case 1: 
-			g2d.drawImage(mazeman2down, mazemanx + 1, mazemany + 1, this);
-			break;
-		case 2: 
-			g2d.drawImage(mazeman3down, mazemanx + 1, mazemany + 1, this);
-			break;
-		case 3: 
-			g2d.drawImage(mazeman4down, mazemanx + 1, mazemany + 1, this);
-			break;
-		default: 
-			g2d.drawImage(mazeman1, mazemanx + 1, mazemany + 1, this);
-			break;
-		}
-	}
-
-	private void drawMazemanLeft(Graphics2D g2d) {
-		switch (mazemanAnimPos) {
-		case 1: 
-			g2d.drawImage(mazeman2left, mazemanx + 1, mazemany + 1, this);
-			break;
-		case 2:
-			g2d.drawImage(mazeman3left, mazemanx + 1, mazemany + 1, this);
-			break;
-		case 3:
-			g2d.drawImage(mazeman4left, mazemanx + 1, mazemany + 1, this);
-			break;
-		default:
-			g2d.drawImage(mazeman1, mazemanx + 1, mazemany + 1, this);
-			break;
-		}
-	}
-
-	private void drawMazemanRight(Graphics2D g2d) {
-		switch (mazemanAnimPos) {
-		case 1: 
-			g2d.drawImage(mazeman2right, mazemanx + 1, mazemany + 1, this);
-			break;
-		case 2: 
-			g2d.drawImage(mazeman3right, mazemanx + 1, mazemany + 1, this);
-			break;
-		case 3: 
-			g2d.drawImage(mazeman4right, mazemanx + 1, mazemany + 1, this);
-			break;
-		default: 
-			g2d.drawImage(mazeman1, mazemanx + 1, mazemany + 1, this);
-			break;
 		}
 	}
 
@@ -274,7 +210,7 @@ public class Board extends JPanel implements ActionListener {
 		Toolkit.getDefaultToolkit().sync();
 		g2d.dispose();
 	}
-	
+
 	@Override
 	public void addNotify() {
 		super.addNotify();

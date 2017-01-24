@@ -1,0 +1,15 @@
+		mazeman2up = new ImageIcon(Board.class.getResource("/up1.png")).getImage();
+		mazeman3up = new ImageIcon(Board.class.getResource("/up2.png")).getImage();
+		mazeman4up = new ImageIcon(Board.class.getResource("/up3.png")).getImage();
+
+		mazeman2down = new ImageIcon(Board.class.getResource("/down1.png")).getImage();
+		mazeman3down = new ImageIcon(Board.class.getResource("/down2.png")).getImage();
+		mazeman4down = new ImageIcon(Board.class.getResource("/down3.png")).getImage();
+
+		mazeman2left = new ImageIcon(Board.class.getResource("/left1.png")).getImage();
+		mazeman3left = new ImageIcon(Board.class.getResource("/left2.png")).getImage();
+		mazeman4left = new ImageIcon(Board.class.getResource("/left3.png")).getImage();
+
+		mazeman2right = new ImageIcon(Board.class.getResource("/right1.png")).getImage();
+		mazeman3right = new ImageIcon(Board.class.getResource("/right2.png")).getImage();
+		mazeman4right = new ImageIcon(Board.class.getResource("/right3.png")).getImage();
