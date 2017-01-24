@@ -6,13 +6,13 @@ import javax.swing.JFrame;
 
 public class Mazeman extends JFrame {
 	public Mazeman() {
-		// init window stuff
+		// init
 		add(new Board());
-		setTitle("Pacman");
-		setDefaultCloseOperation(EXIT_ON_CLOSE);
+		setTitle("Mazeman");		
 		setSize(380, 420);
 		setLocationRelativeTo(null);
 		setVisible(true);
+		setDefaultCloseOperation(EXIT_ON_CLOSE);
 	}
 	
 	public static void main(String[] args) {
@@ -20,7 +20,7 @@ public class Mazeman extends JFrame {
 			@Override
 			public void run() {
 				Mazeman ex = new Mazeman();
-				ex.setVisible(true);
+				//ex.setVisible(true);
 			}
 		});
 	}
