@@ -58,7 +58,7 @@ public class Board extends JPanel implements ActionListener {
 	private Image mazeman3up, mazeman3down, mazeman3left, mazeman3right;
 	private Image mazeman4up, mazeman4down, mazeman4left, mazeman4right;
 
-	private boolean inGame = true;// TODO set back to false
+	private boolean inGame = false;// TODO set back to false
 	private boolean isDying = false;
 	private Color mazeColor;
 	private Color dotColor;
@@ -89,10 +89,12 @@ public class Board extends JPanel implements ActionListener {
 	}
 
 	private void initGame() {
-		score = 0;
-		lives = 3;
-		Sound.theme.play();
-		initLevel();
+		if (inGame) {
+			score = 0;
+			lives = 3;
+			Sound.theme.loop();
+			initLevel();
+		}
 	}
 
 
@@ -196,6 +198,9 @@ public class Board extends JPanel implements ActionListener {
 		} else if (viewdy == 1) {
 			g2d.drawImage(mazeman1, mazemanx + 1, mazemany + 1, this);
 		}
+		else {
+			g2d.drawImage(mazeman1, mazemanx, mazemany, this);
+		}
 	}
 
 	private void drawMaze(Graphics2D g2d) {
@@ -210,30 +215,30 @@ public class Board extends JPanel implements ActionListener {
 				if ((screenData[i] & 1) != 0) {
 					g2d.drawLine(x, y, x, y + BLOCK_SIZE - 1);
 				}
-				
+
 				// 2 == top corner
 				if ((screenData[i] & 2) != 0) {
 					g2d.drawLine(x, y, x + BLOCK_SIZE - 1, y);
 				}
-				
+
 				// 4 == right corner
 				if ((screenData[i] & 4) != 0) {
 					g2d.drawLine(x + BLOCK_SIZE - 1, y, x + BLOCK_SIZE - 1, 
 							y + BLOCK_SIZE - 1);
 				}
-				
+
 				// 8 == bottom corner
 				if ((screenData[i] & 8) != 0) {
 					g2d.drawLine(x, y + BLOCK_SIZE - 1, x + BLOCK_SIZE - 1,
 							y + BLOCK_SIZE - 1);
 				}
-				
+
 				// 16 == dot
 				if ((screenData[i] & 16) != 0) {
 					g2d.setColor(dotColor);
 					g2d.fillRect(x + 11, y + 11, 2, 2);
 				}
-				
+
 				i++;
 			}
 		}
@@ -254,7 +259,7 @@ public class Board extends JPanel implements ActionListener {
 		Graphics2D g2d = (Graphics2D)g;
 		g2d.setColor(Color.black);
 		g2d.fillRect(0, 0, dimension.width, dimension.height);
-		
+
 		drawMaze(g2d);
 
 		if (inGame)

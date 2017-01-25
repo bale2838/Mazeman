@@ -22,7 +22,7 @@ public class Sound {
 		try {
 			new Thread() {
 				public void run() {
-					clip.loop();
+					clip.play();
 				}
 			}.start();
 		} catch (Throwable e) {
