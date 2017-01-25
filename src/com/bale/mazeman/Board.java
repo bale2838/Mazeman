@@ -1,5 +1,6 @@
 package com.bale.mazeman;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Event;
@@ -17,9 +18,12 @@ import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
+import com.bale.mazeman.sound.Sound;
+
 public class Board extends JPanel implements ActionListener {
 	private final int NUM_BLOCKS = 15;
 	private final int BLOCK_SIZE = 24;
+	private final int SCREEN_SIZE = NUM_BLOCKS * BLOCK_SIZE;
 	private final int MAZEMAN_SPEED = 6;
 
 	private final short LEVEL_DATA[] = {
@@ -40,7 +44,7 @@ public class Board extends JPanel implements ActionListener {
 			9, 8, 8, 8, 8, 8, 8, 8, 8, 8, 25, 24, 24, 24, 28
 	};
 
-	private short[] screenData;
+	private int[] screenData;
 	private Dimension dimension;
 	private Image img;
 
@@ -48,7 +52,7 @@ public class Board extends JPanel implements ActionListener {
 	private int mazemanx, mazemany, mazemandx, mazemandy;
 	private int reqdx, reqdy, viewdx, viewdy;
 	private int[] dx, dy;
-	
+
 	private Image mazeman1;
 	private Image mazeman2up, mazeman2down, mazeman2left, mazeman2right;
 	private Image mazeman3up, mazeman3down, mazeman3left, mazeman3right;
@@ -56,6 +60,8 @@ public class Board extends JPanel implements ActionListener {
 
 	private boolean inGame = true;// TODO set back to false
 	private boolean isDying = false;
+	private Color mazeColor;
+	private Color dotColor;
 	private Timer timer;
 
 	public Board() {
@@ -72,10 +78,12 @@ public class Board extends JPanel implements ActionListener {
 	}
 
 	private void initVariables() {
-		screenData = new short[NUM_BLOCKS * NUM_BLOCKS];
+		screenData = new int[NUM_BLOCKS * NUM_BLOCKS];
 		dimension = new Dimension(400, 400);
 		dx = new int[4];
 		dy = new int[4];
+		mazeColor = new Color(5, 100, 5);
+		dotColor = new Color(192, 192, 0);
 		timer = new Timer(40, this);
 		timer.start();
 	}
@@ -83,6 +91,7 @@ public class Board extends JPanel implements ActionListener {
 	private void initGame() {
 		score = 0;
 		lives = 3;
+		Sound.theme.play();
 		initLevel();
 	}
 
@@ -109,7 +118,7 @@ public class Board extends JPanel implements ActionListener {
 
 	private void moveMazeman() {
 		int pos;
-		short ch;
+		int ch;
 
 		if (reqdx == -mazemandx && reqdy == -mazemandy) {
 			mazemandx = reqdx;
@@ -119,14 +128,16 @@ public class Board extends JPanel implements ActionListener {
 		}
 
 		if (mazemanx % BLOCK_SIZE == 0 && mazemany % BLOCK_SIZE == 0) {
-			pos  = (mazemanx / BLOCK_SIZE) + NUM_BLOCKS * (int)(mazemany / BLOCK_SIZE);
+			pos  = (int)(mazemanx / BLOCK_SIZE) + NUM_BLOCKS * (int)(mazemany / BLOCK_SIZE);
 			//System.out.println("pos: " + pos);
 			ch = screenData[pos];
 
 			if ((ch & 16) != 0){
 				//System.out.println("    ch: " + ch);
 				//System.out.println("ch & 1: " + (ch & 1));
-				screenData[pos] = (short)(ch & 15);
+				screenData[pos] = (int)(ch & 15);
+				//Sound.chomp.play();
+				//System.out.println("screenData[pos]: " + screenData[pos]);
 				//System.out.println("ch & 15: " + (ch & 15));
 				score++;
 			}
@@ -138,13 +149,13 @@ public class Board extends JPanel implements ActionListener {
 			 * 8 == bottom border
 			 */
 			boolean hitLeftBorder = ((ch & 1) != 0);
-		    boolean hitRightBorder = ((ch & 4) != 0);
-		    boolean hitTopBorder = ((ch & 2) != 0);
-		    boolean hitBotBorder = ((ch & 8) != 0);
-		    boolean requestLeft = (reqdx == -1 && reqdy == 0);
-		    boolean requestRight = (reqdx == 1 && reqdy == 0);
-		    boolean requestUp = (reqdx == 0 && reqdy == -1);
-		    boolean requestDown = (reqdx == 0 && reqdy == 1);
+			boolean hitRightBorder = ((ch & 4) != 0);
+			boolean hitTopBorder = ((ch & 2) != 0);
+			boolean hitBotBorder = ((ch & 8) != 0);
+			boolean requestLeft = (reqdx == -1 && reqdy == 0);
+			boolean requestRight = (reqdx == 1 && reqdy == 0);
+			boolean requestUp = (reqdx == 0 && reqdy == -1);
+			boolean requestDown = (reqdx == 0 && reqdy == 1);
 			if (reqdx != 0 || reqdy != 0) {
 				if (!((requestLeft && hitLeftBorder)
 						|| (requestRight && hitRightBorder)
@@ -160,8 +171,8 @@ public class Board extends JPanel implements ActionListener {
 			// check for standstill
 			boolean moveLeft = (mazemandx == -1 && mazemandy == 0);
 			boolean moveRight = (mazemandx == 1 && mazemandy == 0);
-		    boolean moveUp = (mazemandx == 0 && mazemandy == -1);
-		    boolean moveDown = (mazemandx == 0 && mazemandy == 1);
+			boolean moveUp = (mazemandx == 0 && mazemandy == -1);
+			boolean moveDown = (mazemandx == 0 && mazemandy == 1);
 			if ((moveLeft && hitLeftBorder)
 					|| (moveRight && hitRightBorder)
 					|| (moveUp && hitTopBorder)
@@ -187,6 +198,48 @@ public class Board extends JPanel implements ActionListener {
 		}
 	}
 
+	private void drawMaze(Graphics2D g2d) {
+		int i = 0;
+
+		for (int y = 0; y < SCREEN_SIZE; y+= BLOCK_SIZE) {
+			for (int x = 0; x < SCREEN_SIZE; x+= BLOCK_SIZE) {
+				g2d.setColor(mazeColor);
+				g2d.setStroke(new BasicStroke(2));
+
+				/*
+				 * 1 == left border
+				 * 4 == right border
+				 * 2 == top border
+				 * 8 == bottom border
+				 */
+				if ((screenData[i] & 1) != 0) {
+					g2d.drawLine(x, y, x, y + BLOCK_SIZE - 1);
+				}
+				
+				if ((screenData[i] & 2) != 0) {
+					g2d.drawLine(x, y, x + BLOCK_SIZE - 1, y);
+				}
+				
+				if ((screenData[i] & 4) != 0) {
+					g2d.drawLine(x + BLOCK_SIZE - 1, y, x + BLOCK_SIZE - 1, 
+							y + BLOCK_SIZE - 1);
+				}
+				
+				if ((screenData[i] & 8) != 0) {
+					g2d.drawLine(x, y + BLOCK_SIZE - 1, x + BLOCK_SIZE - 1,
+							y + BLOCK_SIZE - 1);
+				}
+				
+				if ((screenData[i] & 16) != 0) {
+					g2d.setColor(dotColor);
+					g2d.fillRect(x + 11, y + 11, 2, 2);
+				}
+				
+				i++;
+			}
+		}
+	}
+
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		repaint();
@@ -202,6 +255,8 @@ public class Board extends JPanel implements ActionListener {
 		Graphics2D g2d = (Graphics2D)g;
 		g2d.setColor(Color.black);
 		g2d.fillRect(0, 0, dimension.width, dimension.height);
+		
+		drawMaze(g2d);
 
 		if (inGame)
 			playGame(g2d);
