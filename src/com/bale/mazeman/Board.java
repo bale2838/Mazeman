@@ -143,10 +143,10 @@ public class Board extends JPanel implements ActionListener {
 			}
 
 			/*
-			 * 1 == left border
-			 * 4 == right border
-			 * 2 == top border
-			 * 8 == bottom border
+			 * 1 == left corner
+			 * 4 == right corner
+			 * 2 == top corner
+			 * 8 == bottom corner	
 			 */
 			boolean hitLeftBorder = ((ch & 1) != 0);
 			boolean hitRightBorder = ((ch & 4) != 0);
@@ -206,30 +206,29 @@ public class Board extends JPanel implements ActionListener {
 				g2d.setColor(mazeColor);
 				g2d.setStroke(new BasicStroke(2));
 
-				/*
-				 * 1 == left border
-				 * 4 == right border
-				 * 2 == top border
-				 * 8 == bottom border
-				 */
+				// 1 == left corner
 				if ((screenData[i] & 1) != 0) {
 					g2d.drawLine(x, y, x, y + BLOCK_SIZE - 1);
 				}
 				
+				// 2 == top corner
 				if ((screenData[i] & 2) != 0) {
 					g2d.drawLine(x, y, x + BLOCK_SIZE - 1, y);
 				}
 				
+				// 4 == right corner
 				if ((screenData[i] & 4) != 0) {
 					g2d.drawLine(x + BLOCK_SIZE - 1, y, x + BLOCK_SIZE - 1, 
 							y + BLOCK_SIZE - 1);
 				}
 				
+				// 8 == bottom corner
 				if ((screenData[i] & 8) != 0) {
 					g2d.drawLine(x, y + BLOCK_SIZE - 1, x + BLOCK_SIZE - 1,
 							y + BLOCK_SIZE - 1);
 				}
 				
+				// 16 == dot
 				if ((screenData[i] & 16) != 0) {
 					g2d.setColor(dotColor);
 					g2d.fillRect(x + 11, y + 11, 2, 2);
