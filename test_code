@@ -17,3 +17,73 @@
 		mazeman2right = new ImageIcon(Board.class.getResource("/right1.png")).getImage();
 		mazeman3right = new ImageIcon(Board.class.getResource("/right2.png")).getImage();
 		mazeman4right = new ImageIcon(Board.class.getResource("/right3.png")).getImage();
+		
+		short i;
+        int pos;
+        int count;
+
+        for (i = 0; i < numGhosts; i++) {
+            if (ghostx[i] % BLOCK_SIZE == 0 && ghosty[i] % BLOCK_SIZE == 0) {
+                pos = ghostx[i] / BLOCK_SIZE + NUM_BLOCKS * (int) (ghosty[i] / BLOCK_SIZE);
+
+                count = 0;
+
+                if ((screenData[pos] & 1) == 0 && ghostdx[i] != 1) {
+                    dx[count] = -1;
+                    dy[count] = 0;
+                    count++;
+                }
+
+                if ((screenData[pos] & 2) == 0 && ghostdy[i] != 1) {
+                    dx[count] = 0;
+                    dy[count] = -1;
+                    count++;
+                }
+
+                if ((screenData[pos] & 4) == 0 && ghostdx[i] != -1) {
+                    dx[count] = 1;
+                    dy[count] = 0;
+                    count++;
+                }
+
+                if ((screenData[pos] & 8) == 0 && ghostdy[i] != -1) {
+                    dx[count] = 0;
+                    dy[count] = 1;
+                    count++;
+                }
+
+                if (count == 0) {
+
+                    if ((screenData[pos] & 15) == 15) {
+                        ghostdx[i] = 0;
+                        ghostdy[i] = 0;
+                    } else {
+                        ghostdx[i] = -ghostdx[i];
+                        ghostdy[i] = -ghostdy[i];
+                    }
+
+                } else {
+
+                    count = (int) (Math.random() * count);
+
+                    if (count > 3) {
+                        count = 3;
+                    }
+
+                    ghostdx[i] = dx[count];
+                    ghostdy[i] = dy[count];
+                }
+
+            }
+
+            ghostx[i] = ghostx[i] + (ghostdx[i] * ghostSpeed[i]);
+            ghosty[i] = ghosty[i] + (ghostdy[i] * ghostSpeed[i]);
+            drawGhost(g2d, ghostx[i] + 1, ghosty[i] + 1);
+
+            if (mazemanx > (ghostx[i] - 12) && mazemanx < (ghostx[i] + 12)
+                    && mazemany > (ghosty[i] - 12) && mazemany < (ghosty[i] + 12)
+                    && inGame) {
+
+                //dying = true;
+            }
+        }

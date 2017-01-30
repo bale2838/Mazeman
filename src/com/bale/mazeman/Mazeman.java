@@ -19,7 +19,6 @@ public class Mazeman extends JFrame {
 			@Override
 			public void run() {
 				Mazeman ex = new Mazeman();
-				//ex.setVisible(true);
 			}
 		});
 	}

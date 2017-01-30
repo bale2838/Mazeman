@@ -50,12 +50,15 @@ public class Board extends JPanel implements ActionListener {
 	private Image img;
 
 	private int lives, score;
+	private int numGhosts = 3;
+	private int currentSpeed;
 	private int mazemanx, mazemany, mazemandx, mazemandy;
 	private int reqdx, reqdy, viewdx, viewdy;
 	private int[] dx, dy;
+	private int[] ghostx, ghosty, ghostdx, ghostdy, ghostSpeed;
 
 	private Image mazeman1;
-	
+	private Image ghost;
 
 	private boolean inGame = false;
 	private boolean isDying = false;
@@ -73,6 +76,7 @@ public class Board extends JPanel implements ActionListener {
 	}
 
 	private void loadImages() {
+		ghost = new ImageIcon(Board.class.getResource("/ghost.png")).getImage();
 		mazeman1 = new ImageIcon(Board.class.getResource("/mazeman.png")).getImage();
 	}
 
@@ -81,6 +85,11 @@ public class Board extends JPanel implements ActionListener {
 		dimension = new Dimension(400, 400);
 		dx = new int[4];
 		dy = new int[4];
+		ghostx = new int[numGhosts];
+		ghosty = new int[numGhosts];
+		ghostdx = new int[numGhosts];
+		ghostdy = new int[numGhosts];
+		ghostSpeed = new int[numGhosts];
 		mazeColor = new Color(5, 100, 5);
 		dotColor = new Color(192, 192, 0);
 		timer = new Timer(40, this);
@@ -91,7 +100,8 @@ public class Board extends JPanel implements ActionListener {
 		if (inGame) {
 			score = 0;
 			lives = 3;
-			Sound.theme.loop();
+			//Sound.theme.loop();
+			currentSpeed = 3;
 			initLevel();
 		}
 	}
@@ -100,6 +110,23 @@ public class Board extends JPanel implements ActionListener {
 		for (int i = 0; i < NUM_BLOCKS * NUM_BLOCKS; i++) {
 			screenData[i] = LEVEL_DATA[i];
 		}
+
+		continueLevel();
+	}
+
+	private void continueLevel() {
+		int dy = 1;
+		int dx = 1;
+
+		for (int i = 0; i < numGhosts; i++) {
+			ghosty[i] = 4 * BLOCK_SIZE;
+			ghostx[i] = 4 * BLOCK_SIZE;
+			ghostdy[i] = 0;
+			ghostdx[i] = dx;
+			dx = -dx;
+			ghostSpeed[i] = currentSpeed;
+		}
+
 		mazemanx = 7 * BLOCK_SIZE;
 		mazemany = 11 * BLOCK_SIZE;
 		mazemandx = 0;
@@ -110,17 +137,17 @@ public class Board extends JPanel implements ActionListener {
 		viewdy = 0;
 		isDying = false;
 	}
-	
+
 	private void showIntroScreen(Graphics2D g2d) {
 		g2d.setColor(new Color(0, 32, 48));
 		g2d.fillRect(50, SCREEN_SIZE / 2 - 30, SCREEN_SIZE - 100, 50);
 		g2d.setColor(Color.white);
 		g2d.drawRect(50, SCREEN_SIZE / 2 - 30, SCREEN_SIZE - 100, 50);
-		
+
 		String s = "Press s to start.";
 		Font small = new Font("Helvetica", Font.BOLD, 14);
 		FontMetrics metr = this.getFontMetrics(small);
-		
+
 		g2d.setColor(Color.white);
 		g2d.setFont(small);
 		g2d.drawString(s, (SCREEN_SIZE - metr.stringWidth(s)) / 2, SCREEN_SIZE / 2);
@@ -128,6 +155,7 @@ public class Board extends JPanel implements ActionListener {
 
 	private void playGame(Graphics2D g2d) {
 		moveMazeman();
+		moveGhosts(g2d);
 		drawMazeman(g2d);
 	}
 
@@ -143,6 +171,7 @@ public class Board extends JPanel implements ActionListener {
 		}
 
 		if (mazemanx % BLOCK_SIZE == 0 && mazemany % BLOCK_SIZE == 0) {
+			// BLOCK_SIZE = 24; NUM_BLOCKS = 15;
 			pos  = (int)(mazemanx / BLOCK_SIZE) + NUM_BLOCKS * (int)(mazemany / BLOCK_SIZE);
 			ch = screenData[pos];
 
@@ -161,7 +190,7 @@ public class Board extends JPanel implements ActionListener {
 			boolean hitRightCorner = ((ch & 4) != 0);
 			boolean hitTopCorner = ((ch & 2) != 0);
 			boolean hitBotCorner = ((ch & 8) != 0);
-			
+
 			boolean requestLeft = (reqdx == -1 && reqdy == 0);
 			boolean requestRight = (reqdx == 1 && reqdy == 0);
 			boolean requestUp = (reqdx == 0 && reqdy == -1);
@@ -170,7 +199,7 @@ public class Board extends JPanel implements ActionListener {
 					|| (requestRight && hitRightCorner)
 					|| (requestUp && hitTopCorner)
 					|| (requestDown && hitBotCorner));
-			
+
 			if (reqdx != 0 || reqdy != 0) {
 				if (noHit) {
 					mazemandx = reqdx;
@@ -189,7 +218,7 @@ public class Board extends JPanel implements ActionListener {
 					|| (moveRight && hitRightCorner)
 					|| (moveUp && hitTopCorner)
 					|| (moveDown && hitBotCorner);
-			
+
 			if (hitBarrier) {
 				mazemandx = 0;
 				mazemandy = 0;
@@ -198,6 +227,76 @@ public class Board extends JPanel implements ActionListener {
 
 		mazemanx += MAZEMAN_SPEED * mazemandx;
 		mazemany += MAZEMAN_SPEED * mazemandy;
+	}
+
+	private void moveGhosts(Graphics2D g2d) {
+		int pos;
+		int count;
+
+		for (int i = 0; i < numGhosts; i++) {
+			if (ghostx[i] % BLOCK_SIZE == 0 && ghosty[i] % BLOCK_SIZE == 0) {
+				pos = (int)(ghostx[i] / BLOCK_SIZE) + (NUM_BLOCKS * (int)(ghosty[i] / BLOCK_SIZE));
+
+				count = 0;
+
+				/*
+				 * 1 == left corner
+				 * 4 == right corner
+				 * 2 == top corner
+				 * 8 == bottom corner	
+				 */
+				/*
+				 * If there is no obstacle on the specified corner and the ghost is not already moving to the specified dir, 
+				 * the ghost will move to the left. Otherwise, ghost will continue moving down its path until he is at the 
+				 * end.
+				 */
+				if ((screenData[pos] & 1) == 0 && ghostdx[i] != 1) {
+					dx[count] = -1;
+					dy[count] = 0;
+					count++;
+				}
+
+				if ((screenData[pos] & 2) == 0 && ghostdy[i] != 1) {
+					dx[count] = 0;
+					dy[count] = -1;
+					count++;
+				}
+
+				if ((screenData[pos] & 4) == 0 && ghostdx[i] != -1) {
+					dx[count] = 1;
+					dy[count] = 0;
+					count++;
+				}
+
+				if ((screenData[pos] & 8) == 0 && ghostdy[i] != -1) {
+					dx[count] = 0;
+					dy[count] = 1;
+					count++;
+				}
+
+				if (count == 0) {
+					if ((screenData[pos] & 15) == 15) {
+						ghostdx[i] = 0;
+						ghostdy[i] = 0;
+					} else {
+						ghostdx[i] = -ghostdx[i];
+						ghostdy[i] = -ghostdy[i];
+					}
+				} else {
+					count = (int)(Math.random() * count);
+					if (count > 3) {
+						count = 3;
+					}
+					
+					ghostdx[i] = dx[count];
+					ghostdy[i] = dy[count];
+				}
+			}
+			
+			ghostx[i] = ghostx[i] + (ghostdx[i] * ghostSpeed[i]);
+			ghosty[i] = ghosty[i] + (ghostdy[i] * ghostSpeed[i]);
+			drawGhost(g2d, ghostx[i] + 1, ghosty[i] + 1);
+		}
 	}
 
 	private void drawMazeman(Graphics2D g2d) {
@@ -213,6 +312,10 @@ public class Board extends JPanel implements ActionListener {
 		else {
 			g2d.drawImage(mazeman1, mazemanx, mazemany, this);
 		}
+	}
+	
+	private void drawGhost(Graphics2D g2d, int x, int y) {
+		g2d.drawImage(ghost, x, y, this);
 	}
 
 	private void drawMaze(Graphics2D g2d) {
