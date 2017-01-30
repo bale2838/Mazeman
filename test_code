@@ -1,3 +1,7 @@
+	private Image mazeman2up, mazeman2down, mazeman2left, mazeman2right;
+	private Image mazeman3up, mazeman3down, mazeman3left, mazeman3right;
+	private Image mazeman4up, mazeman4down, mazeman4left, mazeman4right;
+
 		mazeman2up = new ImageIcon(Board.class.getResource("/up1.png")).getImage();
 		mazeman3up = new ImageIcon(Board.class.getResource("/up2.png")).getImage();
 		mazeman4up = new ImageIcon(Board.class.getResource("/up3.png")).getImage();

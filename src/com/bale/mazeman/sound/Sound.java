@@ -5,7 +5,6 @@ import java.applet.AudioClip;
 
 public class Sound {
 	public static final Sound chomp = new Sound("/chomp.wav");
-	public static final Sound punchout = new Sound("/punchout.wav");
 	public static final Sound theme = new Sound("/theme.wav");
 
 	private AudioClip clip;

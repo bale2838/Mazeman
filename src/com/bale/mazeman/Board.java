@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Event;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -54,11 +55,9 @@ public class Board extends JPanel implements ActionListener {
 	private int[] dx, dy;
 
 	private Image mazeman1;
-	private Image mazeman2up, mazeman2down, mazeman2left, mazeman2right;
-	private Image mazeman3up, mazeman3down, mazeman3left, mazeman3right;
-	private Image mazeman4up, mazeman4down, mazeman4left, mazeman4right;
+	
 
-	private boolean inGame = false;// TODO set back to false
+	private boolean inGame = false;
 	private boolean isDying = false;
 	private Color mazeColor;
 	private Color dotColor;
@@ -97,7 +96,6 @@ public class Board extends JPanel implements ActionListener {
 		}
 	}
 
-
 	private void initLevel() {
 		for (int i = 0; i < NUM_BLOCKS * NUM_BLOCKS; i++) {
 			screenData[i] = LEVEL_DATA[i];
@@ -111,6 +109,21 @@ public class Board extends JPanel implements ActionListener {
 		viewdx = -1;
 		viewdy = 0;
 		isDying = false;
+	}
+	
+	private void showIntroScreen(Graphics2D g2d) {
+		g2d.setColor(new Color(0, 32, 48));
+		g2d.fillRect(50, SCREEN_SIZE / 2 - 30, SCREEN_SIZE - 100, 50);
+		g2d.setColor(Color.white);
+		g2d.drawRect(50, SCREEN_SIZE / 2 - 30, SCREEN_SIZE - 100, 50);
+		
+		String s = "Press s to start.";
+		Font small = new Font("Helvetica", Font.BOLD, 14);
+		FontMetrics metr = this.getFontMetrics(small);
+		
+		g2d.setColor(Color.white);
+		g2d.setFont(small);
+		g2d.drawString(s, (SCREEN_SIZE - metr.stringWidth(s)) / 2, SCREEN_SIZE / 2);
 	}
 
 	private void playGame(Graphics2D g2d) {
@@ -131,16 +144,10 @@ public class Board extends JPanel implements ActionListener {
 
 		if (mazemanx % BLOCK_SIZE == 0 && mazemany % BLOCK_SIZE == 0) {
 			pos  = (int)(mazemanx / BLOCK_SIZE) + NUM_BLOCKS * (int)(mazemany / BLOCK_SIZE);
-			//System.out.println("pos: " + pos);
 			ch = screenData[pos];
 
 			if ((ch & 16) != 0){
-				//System.out.println("    ch: " + ch);
-				//System.out.println("ch & 1: " + (ch & 1));
 				screenData[pos] = (int)(ch & 15);
-				//Sound.chomp.play();
-				//System.out.println("screenData[pos]: " + screenData[pos]);
-				//System.out.println("ch & 15: " + (ch & 15));
 				score++;
 			}
 
@@ -150,19 +157,22 @@ public class Board extends JPanel implements ActionListener {
 			 * 2 == top corner
 			 * 8 == bottom corner	
 			 */
-			boolean hitLeftBorder = ((ch & 1) != 0);
-			boolean hitRightBorder = ((ch & 4) != 0);
-			boolean hitTopBorder = ((ch & 2) != 0);
-			boolean hitBotBorder = ((ch & 8) != 0);
+			boolean hitLeftCorner = ((ch & 1) != 0);
+			boolean hitRightCorner = ((ch & 4) != 0);
+			boolean hitTopCorner = ((ch & 2) != 0);
+			boolean hitBotCorner = ((ch & 8) != 0);
+			
 			boolean requestLeft = (reqdx == -1 && reqdy == 0);
 			boolean requestRight = (reqdx == 1 && reqdy == 0);
 			boolean requestUp = (reqdx == 0 && reqdy == -1);
 			boolean requestDown = (reqdx == 0 && reqdy == 1);
+			boolean noHit = !((requestLeft && hitLeftCorner)
+					|| (requestRight && hitRightCorner)
+					|| (requestUp && hitTopCorner)
+					|| (requestDown && hitBotCorner));
+			
 			if (reqdx != 0 || reqdy != 0) {
-				if (!((requestLeft && hitLeftBorder)
-						|| (requestRight && hitRightBorder)
-						|| (requestUp && hitTopBorder)
-						|| (requestDown && hitBotBorder))) {
+				if (noHit) {
 					mazemandx = reqdx;
 					mazemandy = reqdy;
 					viewdx = mazemandx;
@@ -175,10 +185,12 @@ public class Board extends JPanel implements ActionListener {
 			boolean moveRight = (mazemandx == 1 && mazemandy == 0);
 			boolean moveUp = (mazemandx == 0 && mazemandy == -1);
 			boolean moveDown = (mazemandx == 0 && mazemandy == 1);
-			if ((moveLeft && hitLeftBorder)
-					|| (moveRight && hitRightBorder)
-					|| (moveUp && hitTopBorder)
-					|| (moveDown && hitBotBorder)) {
+			boolean hitBarrier = (moveLeft && hitLeftCorner)
+					|| (moveRight && hitRightCorner)
+					|| (moveUp && hitTopCorner)
+					|| (moveDown && hitBotCorner);
+			
+			if (hitBarrier) {
 				mazemandx = 0;
 				mazemandy = 0;
 			}
@@ -211,23 +223,23 @@ public class Board extends JPanel implements ActionListener {
 				g2d.setColor(mazeColor);
 				g2d.setStroke(new BasicStroke(2));
 
-				// 1 == left corner
+				// 1 == left border
 				if ((screenData[i] & 1) != 0) {
 					g2d.drawLine(x, y, x, y + BLOCK_SIZE - 1);
 				}
 
-				// 2 == top corner
+				// 2 == top border
 				if ((screenData[i] & 2) != 0) {
 					g2d.drawLine(x, y, x + BLOCK_SIZE - 1, y);
 				}
 
-				// 4 == right corner
+				// 4 == right border
 				if ((screenData[i] & 4) != 0) {
 					g2d.drawLine(x + BLOCK_SIZE - 1, y, x + BLOCK_SIZE - 1, 
 							y + BLOCK_SIZE - 1);
 				}
 
-				// 8 == bottom corner
+				// 8 == bottom border
 				if ((screenData[i] & 8) != 0) {
 					g2d.drawLine(x, y + BLOCK_SIZE - 1, x + BLOCK_SIZE - 1,
 							y + BLOCK_SIZE - 1);
@@ -264,6 +276,8 @@ public class Board extends JPanel implements ActionListener {
 
 		if (inGame)
 			playGame(g2d);
+		else
+			showIntroScreen(g2d);
 
 		g2d.drawImage(img, 5, 5, this);
 		Toolkit.getDefaultToolkit().sync();
