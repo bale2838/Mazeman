@@ -61,7 +61,7 @@ public class Board extends JPanel implements ActionListener {
 	private Image ghost;
 
 	private boolean inGame = false;
-	private boolean isDying = false;
+	private boolean dead = false;
 	private Color mazeColor;
 	private Color dotColor;
 	private Timer timer;
@@ -100,7 +100,7 @@ public class Board extends JPanel implements ActionListener {
 		if (inGame) {
 			score = 0;
 			lives = 3;
-			//Sound.theme.loop();
+			Sound.theme.loop();
 			currentSpeed = 3;
 			initLevel();
 		}
@@ -135,7 +135,7 @@ public class Board extends JPanel implements ActionListener {
 		reqdy = 0;
 		viewdx = -1;
 		viewdy = 0;
-		isDying = false;
+		dead = false;
 	}
 
 	private void showIntroScreen(Graphics2D g2d) {
@@ -152,11 +152,39 @@ public class Board extends JPanel implements ActionListener {
 		g2d.setFont(small);
 		g2d.drawString(s, (SCREEN_SIZE - metr.stringWidth(s)) / 2, SCREEN_SIZE / 2);
 	}
+	
+	private void showScore(Graphics2D g2d) {
+		String str;
+		Font smallFont = new Font("Helvetica", Font.BOLD, 14);
+		g2d.setFont(smallFont);
+		g2d.setColor(new Color(96, 128, 255));
+		str = "Score: " + score;
+		g2d.drawString(str, SCREEN_SIZE / 2 + 96, SCREEN_SIZE + 16);
+		
+		for (int i = 0; i < lives; i++) {
+			g2d.drawImage(mazeman1, i * 28 + 8, SCREEN_SIZE + 1, this);
+		}
+	}
 
 	private void playGame(Graphics2D g2d) {
-		moveMazeman();
-		moveGhosts(g2d);
-		drawMazeman(g2d);
+		if (dead) {
+			death();
+		} else {
+			moveMazeman();
+			moveGhosts(g2d);
+			drawMazeman(g2d);
+		}
+	}
+
+	private void death() {
+		lives--;
+		Sound.playerhurt.play();
+		if (lives == 0) {
+			Sound.theme.stop();
+			Sound.death.play();
+			inGame = false;
+		}
+		continueLevel();
 	}
 
 	private void moveMazeman() {
@@ -287,15 +315,20 @@ public class Board extends JPanel implements ActionListener {
 					if (count > 3) {
 						count = 3;
 					}
-					
+
 					ghostdx[i] = dx[count];
 					ghostdy[i] = dy[count];
 				}
 			}
-			
+
 			ghostx[i] = ghostx[i] + (ghostdx[i] * ghostSpeed[i]);
 			ghosty[i] = ghosty[i] + (ghostdy[i] * ghostSpeed[i]);
 			drawGhost(g2d, ghostx[i] + 1, ghosty[i] + 1);
+
+			if (mazemanx > (ghostx[i] - 12) && mazemanx < (ghostx[i] + 12) 
+					&& mazemany > (ghosty[i] - 12) && mazemany < (ghosty[i] + 12) && inGame) {
+				dead = true;
+			}
 		}
 	}
 
@@ -313,7 +346,7 @@ public class Board extends JPanel implements ActionListener {
 			g2d.drawImage(mazeman1, mazemanx, mazemany, this);
 		}
 	}
-	
+
 	private void drawGhost(Graphics2D g2d, int x, int y) {
 		g2d.drawImage(ghost, x, y, this);
 	}
@@ -376,6 +409,7 @@ public class Board extends JPanel implements ActionListener {
 		g2d.fillRect(0, 0, dimension.width, dimension.height);
 
 		drawMaze(g2d);
+		showScore(g2d);
 
 		if (inGame)
 			playGame(g2d);
@@ -414,8 +448,14 @@ public class Board extends JPanel implements ActionListener {
 				} else if (key == KeyEvent.VK_ESCAPE && timer.isRunning()) {
 					inGame = false;
 				} else if (key == KeyEvent.VK_PAUSE) {
-					if (timer.isRunning()) 
+					if (timer.isRunning()) {
+						try {
+							Sound.theme.wait();
+						} catch (InterruptedException e1) {
+							e1.printStackTrace();
+						}
 						timer.stop();
+					}
 					else 
 						timer.start();
 				}
