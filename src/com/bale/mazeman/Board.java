@@ -50,7 +50,8 @@ public class Board extends JPanel implements ActionListener {
 	private Image img;
 
 	private int lives, score;
-	private int numGhosts = 3;
+	private int numDots = 0;
+	private int numGhosts = 0;
 	private int currentSpeed;
 	private int mazemanx, mazemany, mazemandx, mazemandy;
 	private int reqdx, reqdy, viewdx, viewdy;
@@ -62,6 +63,7 @@ public class Board extends JPanel implements ActionListener {
 
 	private boolean inGame = false;
 	private boolean dead = false;
+	private boolean gameOver = false;
 	private Color mazeColor;
 	private Color dotColor;
 	private Timer timer;
@@ -98,9 +100,9 @@ public class Board extends JPanel implements ActionListener {
 
 	private void initGame() {
 		if (inGame) {
-			score = 0;
+			score = -1;// starts at 1
 			lives = 3;
-			Sound.theme.loop();
+			//Sound.theme.loop();
 			currentSpeed = 3;
 			initLevel();
 		}
@@ -109,6 +111,20 @@ public class Board extends JPanel implements ActionListener {
 	private void initLevel() {
 		for (int i = 0; i < NUM_BLOCKS * NUM_BLOCKS; i++) {
 			screenData[i] = LEVEL_DATA[i];
+		}
+
+		if (numDots == 0) {
+			int i = 0;
+			for (int y = 0; y < SCREEN_SIZE; y+= BLOCK_SIZE) {
+				for (int x = 0; x < SCREEN_SIZE; x+= BLOCK_SIZE) {
+					// 16 == dot
+					if ((screenData[i] & 16) != 0) {
+						numDots++;
+					}
+					i++;
+				}
+			}
+			numDots--;// since score starts at 1
 		}
 
 		continueLevel();
@@ -144,15 +160,34 @@ public class Board extends JPanel implements ActionListener {
 		g2d.setColor(Color.white);
 		g2d.drawRect(50, SCREEN_SIZE / 2 - 30, SCREEN_SIZE - 100, 50);
 
+		String title = "Mazeman";
 		String s = "Press s to start.";
 		Font small = new Font("Helvetica", Font.BOLD, 14);
 		FontMetrics metr = this.getFontMetrics(small);
 
 		g2d.setColor(Color.white);
 		g2d.setFont(small);
-		g2d.drawString(s, (SCREEN_SIZE - metr.stringWidth(s)) / 2, SCREEN_SIZE / 2);
+		g2d.drawString(title, (SCREEN_SIZE - metr.stringWidth(title)) / 2, SCREEN_SIZE / 2 - 10);
+		g2d.drawString(s, (SCREEN_SIZE - metr.stringWidth(s)) / 2, (SCREEN_SIZE / 2) + 10);
 	}
-	
+
+	private void showGameOverScreen(Graphics2D g2d) {
+		g2d.setColor(new Color(0, 32, 48));
+		g2d.fillRect(50, SCREEN_SIZE / 2 - 30, SCREEN_SIZE - 100, 50);
+		g2d.setColor(Color.white);
+		g2d.drawRect(50, SCREEN_SIZE / 2 - 30, SCREEN_SIZE - 100, 50);
+
+		String title = "Game Over!";
+		String s = "Press s to start again.";
+		Font small = new Font("Helvetica", Font.BOLD, 14);
+		FontMetrics metr = this.getFontMetrics(small);
+
+		g2d.setColor(Color.white);
+		g2d.setFont(small);
+		g2d.drawString(title, (SCREEN_SIZE - metr.stringWidth(title)) / 2, SCREEN_SIZE / 2 - 10);
+		g2d.drawString(s, (SCREEN_SIZE - metr.stringWidth(s)) / 2, (SCREEN_SIZE / 2) + 10);
+	}
+
 	private void showScore(Graphics2D g2d) {
 		String str;
 		Font smallFont = new Font("Helvetica", Font.BOLD, 14);
@@ -160,7 +195,7 @@ public class Board extends JPanel implements ActionListener {
 		g2d.setColor(new Color(96, 128, 255));
 		str = "Score: " + score;
 		g2d.drawString(str, SCREEN_SIZE / 2 + 96, SCREEN_SIZE + 16);
-		
+
 		for (int i = 0; i < lives; i++) {
 			g2d.drawImage(mazeman1, i * 28 + 8, SCREEN_SIZE + 1, this);
 		}
@@ -168,7 +203,7 @@ public class Board extends JPanel implements ActionListener {
 
 	private void playGame(Graphics2D g2d) {
 		if (dead) {
-			death();
+			death(g2d);
 		} else {
 			moveMazeman();
 			moveGhosts(g2d);
@@ -176,13 +211,14 @@ public class Board extends JPanel implements ActionListener {
 		}
 	}
 
-	private void death() {
+	private void death(Graphics2D g2d) {
 		lives--;
 		Sound.playerhurt.play();
 		if (lives == 0) {
 			Sound.theme.stop();
 			Sound.death.play();
 			inGame = false;
+			gameOver = true;
 		}
 		continueLevel();
 	}
@@ -408,13 +444,27 @@ public class Board extends JPanel implements ActionListener {
 		g2d.setColor(Color.black);
 		g2d.fillRect(0, 0, dimension.width, dimension.height);
 
+		System.out.println("score: " + score);
+		System.out.println("numDots: " +  numDots);
+		if (score == numDots) {
+			System.out.println("score: " + score);
+			System.out.println("numDots: " +  numDots);
+			gameOver = true;
+		}
+
+		if (gameOver) {
+			showGameOverScreen(g2d);
+			return;
+		} else if (!inGame) {
+			showIntroScreen(g2d);
+			return;
+		}
+
 		drawMaze(g2d);
 		showScore(g2d);
 
 		if (inGame)
 			playGame(g2d);
-		else
-			showIntroScreen(g2d);
 
 		g2d.drawImage(img, 5, 5, this);
 		Toolkit.getDefaultToolkit().sync();
@@ -458,10 +508,19 @@ public class Board extends JPanel implements ActionListener {
 					}
 					else 
 						timer.start();
+				} else {
+					if (key == 's' || key == 'S') {
+						inGame = true;
+						gameOver = false;
+						score = -1;
+						initGame();
+					}
 				}
 			} else {
 				if (key == 's' || key == 'S') {
 					inGame = true;
+					gameOver = false;
+					score = -1;
 					initGame();
 				}
 			}
