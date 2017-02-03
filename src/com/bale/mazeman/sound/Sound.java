@@ -10,7 +10,6 @@ public class Sound {
 	public static final Sound death = new Sound("/death.wav");
 
 	private AudioClip clip;
-	Thread thread;
 
 	private Sound(String name) {
 		try {

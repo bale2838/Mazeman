@@ -51,7 +51,7 @@ public class Board extends JPanel implements ActionListener {
 
 	private int lives, score;
 	private int numDots = 0;
-	private int numGhosts = 0;
+	private int numGhosts = 3;
 	private int currentSpeed;
 	private int mazemanx, mazemany, mazemandx, mazemandy;
 	private int reqdx, reqdy, viewdx, viewdy;
@@ -102,7 +102,7 @@ public class Board extends JPanel implements ActionListener {
 		if (inGame) {
 			score = -1;// starts at 1
 			lives = 3;
-			//Sound.theme.loop();
+			Sound.theme.loop();
 			currentSpeed = 3;
 			initLevel();
 		}
@@ -444,11 +444,7 @@ public class Board extends JPanel implements ActionListener {
 		g2d.setColor(Color.black);
 		g2d.fillRect(0, 0, dimension.width, dimension.height);
 
-		System.out.println("score: " + score);
-		System.out.println("numDots: " +  numDots);
 		if (score == numDots) {
-			System.out.println("score: " + score);
-			System.out.println("numDots: " +  numDots);
 			gameOver = true;
 		}
 
